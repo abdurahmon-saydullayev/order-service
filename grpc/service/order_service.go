@@ -31,27 +31,23 @@ func NewOrderService(cfg config.Config, log logger.LoggerI, strg storage.Storage
 	}
 }
 
-// func (s *OrderService) Create(ctx context.Context, req *order_service.CreateOrder) (resp *order_service.Order, err error) {
-// 	s.log.Info("CreateOrder", logger.Any("request", req))
+func (s *OrderService) Create(ctx context.Context, req *order_service.CreateOrder) (resp *order_service.Order, err error) {
+	s.log.Info("CreateOrder", logger.Any("request", req))
 
-//		order, err := s.strg.Order().Create(ctx, &order_service.CreateOrder{
-//			ProductId: req.ProductId,
-//			UserId:    user.Id,
-//			Status:    req.Status,
-//		})
-//		fmt.Println(order.Id, "order id", req.Id)
-//		if err != nil {
-//			s.log.Error("CreateOrder", logger.Error(err))
-//			return nil, status.Error(codes.InvalidArgument, err.Error())
-//		}
-//		fmt.Println("after")
-//		return &order_service.Order{
-//			Id:        order.Id,
-//			ProductId: req.ProductId,
-//			UserId:    user.Id,
-//			Status:    req.Status,
-//		}, nil
-//	}
+	orderPKey, err := s.strg.Order().Create(ctx, req)
+	if err != nil {
+		s.log.Error("CreateOrder", logger.Error(err))
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	createdOrder, err := s.strg.Order().GetById(ctx, orderPKey)
+	if err != nil {
+		s.log.Error("GetOrder", logger.Error(err))
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	return createdOrder, nil
+}
 func (s *OrderService) Delete(context.Context, *order_service.OrderPrimaryKey) (res *emptypb.Empty, err error) {
 	return res, nil
 }
@@ -61,7 +57,7 @@ func (s *OrderService) GetAll(context.Context, *order_service.GetOrderListReques
 }
 
 func (s *OrderService) GetById(ctx context.Context, req *order_service.OrderPrimaryKey) (*order_service.Order, error) {
-	s.log.Info("GetByID", logger.Any("request", req))
+	s.log.Info("GetByID order", logger.Any("request", req))
 
 	order, err := s.strg.Order().GetById(ctx, req)
 	if err != nil {
@@ -69,15 +65,15 @@ func (s *OrderService) GetById(ctx context.Context, req *order_service.OrderPrim
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	user, err := s.services.UserService().GetByID(ctx, &user_service.UserPrimaryKey{Id: req.Id})
+	user, err := s.services.UserService().GetByID(ctx, &user_service.UserPrimaryKey{Id: order.UserId})
 	if err != nil {
 		return nil, nil
 	}
 
-	order.UserData.Id = user.Id
-	order.UserData.FirstName = user.FirstName
-	order.UserData.LastName = user.LastName
-	order.UserData.PhoneNumber = user.PhoneNumber
+	order.Id = user.Id
+	order.UserFirstName = user.FirstName
+	order.UserLastName = user.LastName
+	order.UserPhoneNumber = user.PhoneNumber
 
 	return order, nil
 }

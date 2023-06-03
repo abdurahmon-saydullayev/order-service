@@ -4,6 +4,8 @@ import (
 	"Projects/store/order-service/genproto/order_service"
 	"Projects/store/order-service/storage"
 	"context"
+	"database/sql"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -22,68 +24,68 @@ func NewUserRepo(db *pgxpool.Pool) storage.OrderRepoI {
 func (b *orderRepo) Create(ctx context.Context, req *order_service.CreateOrder) (resp *order_service.OrderPrimaryKey, err error) {
 	id := uuid.New().String()
 
-	query := `insert into orders 
+	query := `insert into "order"
 				(id, 
 				product_id, 
 				user_id,
-				user_first_name,
-				user_last_name,
-				user_phone_number,
 				status
 				) VALUES (
 					$1, 
 					$2, 
 					$3,
-					$4,
-					$5,
-					$6,
-					$7
+					$4
 				)`
 
 	_, err = b.db.Exec(ctx, query,
 		id,
 		req.ProductId,
-		req.UserData.Id,
-		req.UserData.FirstName,
-		req.UserData.LastName,
-		req.UserData.PhoneNumber,
+		req.UserId,
 		req.Status,
 	)
-
+	fmt.Println(query)
 	if err != nil {
 		return resp, err
 	}
 
 	resp = &order_service.OrderPrimaryKey{
-		Id: req.Id,
+		Id: id,
 	}
 
 	return resp, nil
 }
 
-func (b *orderRepo) GetById(ctx context.Context, req *order_service.OrderPrimaryKey) (*order_service.Order, error) {
-	var (
-		query string
-		order order_service.Order
-	)
+func (b *orderRepo) GetById(ctx context.Context, req *order_service.OrderPrimaryKey) (resp *order_service.Order, err error) {
+	fmt.Println("laskdmalksdmalskdmasklcaskmdc")
 
-	query = `
-		SELECT * FROM orders
+	query := `
+		SELECT id,product_id,user_id,status
+	     FROM "order"
 		WHERE id = $1
 	`
 
-	err := b.db.QueryRow(ctx, query, req.Id).Scan(
-		&order.Id,
-		&order.ProductId,
-		&order.UserData.Id,
-		&order.UserData.FirstName,
-		&order.UserData.LastName,
-		&order.UserData.PhoneNumber,
-		&order.Status,
+	var (
+		id         sql.NullString
+		product_id sql.NullString
+		user_id    sql.NullString
+		status     sql.NullString
+	)
+	err = b.db.QueryRow(ctx, query, req.Id).Scan(
+		&id,
+		&product_id,
+		&user_id,
+		&status,
 	)
 	if err != nil {
+		fmt.Println("this aksdjnaksjndcaskncdkasnc")
 		return nil, err
 	}
 
-	return &order, nil
+	resp = &order_service.Order{
+		Id:        id.String,
+		ProductId: product_id.String,
+		UserId:    user_id.String,
+		Status:    status.String,
+	}
+
+	return
 }

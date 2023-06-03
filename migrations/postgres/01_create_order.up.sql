@@ -1,10 +1,8 @@
-CREATE TABLE IF NOT EXISTS "user" (
+CREATE TABLE IF NOT EXISTS "order" (
     "id" UUID PRIMARY KEY,
-    "first_name" VARCHAR(30) NOT NULL,
-    "last_name" VARCHAR(30) NOT NULL,
-    "phone_number" VARCHAR(17) NOT NULL UNIQUE,
-    "date_of_birth" DATE,
-    "password" VARCHAR(30) NOT NULL,
+    "product_id" VARCHAR(30) NOT NULL,
+    "user_id" VARCHAR(100) NOT NULL,
+    "status" VARCHAR NOT NULL,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP
 ); 

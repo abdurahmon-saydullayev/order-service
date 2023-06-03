@@ -6,7 +6,7 @@ import "google/protobuf/empty.proto";
 import "order.proto";
 
 service OrderService{
-    rpc Create(CreateOrder)returns(OrderPrimaryKey);
+    rpc Create(CreateOrder)returns(Order);
     rpc GetById(OrderPrimaryKey) returns(Order);
     rpc GetAll(GetOrderListRequest) returns(GetOrderListResponse); 
     rpc Delete(OrderPrimaryKey)returns(google.protobuf.Empty);
